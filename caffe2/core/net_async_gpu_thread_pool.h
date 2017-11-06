@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-#include "caffe2/core/context.h"
-#include "caffe2/core/event.h"
+#ifndef CAFFE2_CORE_NET_ASYNC_GPU_THREAD_POOL_H_
+#define CAFFE2_CORE_NET_ASYNC_GPU_THREAD_POOL_H_
+
+#include "caffe2/core/net_async_polling.h"
 
 namespace caffe2 {
 
-TEST(EventCPUTest, EventBasics) {
-  DeviceOption device_option;
-  device_option.set_device_type(CPU);
-  Event event(device_option);
-  CPUContext context;
-
-  context.Record(&event);
-  event.SetFinished();
-
-  context.WaitEvent(event);
-  event.Finish();
-
-  event.Reset();
-  event.Record(CPU, &context);
-  event.SetFinished();
-  event.Wait(CPU, &context);
-}
+std::shared_ptr<TaskThreadPool> GetAsyncNetGPUThreadPool(int gpu_id);
 
 } // namespace caffe2
+
+#endif // CAFFE2_CORE_NET_ASYNC_GPU_THREAD_POOL_H_

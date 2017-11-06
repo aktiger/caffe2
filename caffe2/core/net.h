@@ -20,10 +20,10 @@
 #include <atomic>
 #include <climits>
 #include <cstddef>
-#include <thread>  // NOLINT
+#include <thread> // NOLINT
 #include <typeinfo>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include "caffe2/core/blob.h"
 #include "caffe2/core/common.h"
@@ -52,21 +52,37 @@ class NetBase : public Observable<NetBase> {
  public:
   NetBase(const std::shared_ptr<const NetDef>& net_def, Workspace* ws);
   virtual ~NetBase() noexcept {}
-  virtual bool RunAsync() = 0;
+
   virtual bool SupportsAsync() = 0;
   inline const vector<const Event*>& events() const {
     return events_;
   }
 
+  virtual void Wait() {
+    // by default just wait till all events are finished
+    for (const auto& event : events_) {
+      event->Finish();
+      if (event->Query() != EventStatus::EVENT_SUCCESS) {
+        CAFFE_THROW(event->ErrorMessage());
+      }
+    }
+  }
+
   inline bool Run() {
     if (!RunAsync()) {
+      LOG(ERROR) << "Failed to execute async run";
       return false;
     }
+    Wait();
     for (const Event* event : events_) {
-      event->Finish();
+      if (event->Query() != EventStatus::EVENT_SUCCESS) {
+        CAFFE_THROW(event->ErrorMessage());
+      }
     }
     return true;
   }
+
+  bool RunAsync();
 
   /**
    * Benchmarks a network.
@@ -104,12 +120,18 @@ class NetBase : public Observable<NetBase> {
     return name_;
   }
 
+  inline const std::shared_ptr<const NetDef> debug_def() const {
+    return net_def_;
+  }
+
  protected:
+  virtual bool DoRunAsync() = 0;
+
   vector<string> external_input_;
   vector<string> external_output_;
   string name_;
   vector<const Event*> events_;
-
+  std::shared_ptr<const NetDef> net_def_;
   DISABLE_COPY_AND_ASSIGN(NetBase);
 };
 
@@ -137,6 +159,6 @@ unique_ptr<NetBase> CreateNet(
 
 void SetGlobalNetObserverCreator(NetObserverCreator creator);
 
-}  // namespace caffe2
+} // namespace caffe2
 
-#endif  // CAFFE2_CORE_NET_H_
+#endif // CAFFE2_CORE_NET_H_
