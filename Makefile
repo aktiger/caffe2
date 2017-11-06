@@ -1,7 +1,7 @@
 # This makefile does nothing but delegating the actual building to cmake.
 
 all:
-	@mkdir -p build && cd build && cmake .. $(shell python ./scripts/get_python_cmake_flags.py) && $(MAKE)
+	@mkdir -p build && cd build && cmake .. $(shell python ./scripts/get_python_cmake_flags.py) -DCUDA_USE_STATIC_CUDA_RUNTIME=OFF -DCMAKE_VERBOSE_MAKEFILE=ON && $(MAKE)
 
 local:
 	@./scripts/build_local.sh
@@ -13,7 +13,7 @@ ios:
 	@./scripts/build_ios.sh
 
 clean: # This will remove ALL build folders.
-	@rm -r build*/
+	@rm -fr build*/
 
 linecount:
 	@cloc --read-lang-def=caffe.cloc caffe2 || \

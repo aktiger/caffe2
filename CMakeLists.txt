@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 # ---[ Project and semantic versioning.
 project(Caffe2 CXX C)
 
+set(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CAFFE2_VERSION_MAJOR 0)
 set(CAFFE2_VERSION_MINOR 8)
 set(CAFFE2_VERSION_PATCH 1)
